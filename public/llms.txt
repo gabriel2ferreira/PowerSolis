@@ -1,0 +1,17 @@
+## Pages
+- [- Power Solis](/accesslogs): No description available
+- [- Power Solis](/dataimport): No description available
+- [- Power Solis](/equipmentdetails): No description available
+- [- Power Solis](/profile): No description available
+- [- Power Solis](/usermanagement): No description available
+- [Alarmes - Power Solis](/alarms): No description available
+- [Dashboard - Power Solis](/dashboardhome): No description available
+- [Dispositivos - Power Solis](/devices): Gerencie todos os seus dispositivos e equipamentos elétricos em um só lugar
+- [Gestão de Ativos - Power Solis](/equipmentmanagement): No description available
+- [Importar Relatório - Power Solis](/reportimport): Importe relatórios PDF de equipamentos usando IA
+- [Lista de Equipamentos - Power Solis](/equipmentlist): No description available
+- [Mapas de Localização - Plataforma Power Solis](/maps): Localização e status dos transformadores em mapa interativo
+- [Power Solis - Login](/login): Acesse a plataforma de monitoramento de transformadores Power Solis
+- [Previsão de Vida Útil - Power Solis](/predictions): No description available
+- [Relatórios - Power Solis](/reports): Geração e gerenciamento de relatórios de equipamentos
+- [Tratamento de Dados - Plataforma Power Solis](/datatreatment): Inserção manual e correção de dados dos transformadores

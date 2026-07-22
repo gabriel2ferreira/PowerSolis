@@ -1,0 +1,204 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+
+    --status-critical: 0 84.2% 60.2%;
+    --status-warning: 38 92% 50%;
+    --status-normal: 142.1 76.2% 36.3%;
+    --status-new: 221.2 83.2% 53.3%;
+
+    /* Dashboard specific tokens */
+    --dash-nav-bg: 240 5% 96%;
+    --dash-nav-active: 221.2 83.2% 53.3%;
+    --dash-nav-inactive: 215.4 16.3% 46.9%;
+    
+    /* Life Expectancy Health Colors */
+    --health-normal: 142.1 76.2% 36.3%;
+    --health-attention: 38 92% 50%;
+    --health-critical: 0 84.2% 60.2%;
+    --health-expired: 215.4 16.3% 46.9%;
+    
+    --chart-temp: 221.2 83.2% 53.3%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+
+    --status-critical: 0 72% 51%;
+    --status-warning: 38 92% 50%;
+    --status-normal: 142.1 70% 45%;
+    --status-new: 217.2 91.2% 59.8%;
+
+    /* Dashboard specific tokens */
+    --dash-nav-bg: 222.2 84% 4.9%;
+    --dash-nav-active: 217.2 91.2% 59.8%;
+    --dash-nav-inactive: 215 20.2% 65.1%;
+    
+    /* Life Expectancy Health Colors */
+    --health-normal: 142.1 70% 45%;
+    --health-attention: 38 92% 50%;
+    --health-critical: 0 72% 51%;
+    --health-expired: 215 20.2% 65.1%;
+    
+    --chart-temp: 217.2 91.2% 59.8%;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-foreground;
+  }
+}
+
+@layer components {
+  .dashboard-tab {
+    @apply flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200 border-b-2 whitespace-nowrap;
+  }
+  .dashboard-tab-active {
+    @apply border-[hsl(var(--dash-nav-active))] text-[hsl(var(--dash-nav-active))] bg-[hsl(var(--dash-nav-active))]/10 rounded-t-md;
+  }
+  .dashboard-tab-inactive {
+    @apply border-transparent text-[hsl(var(--dash-nav-inactive))] hover:text-foreground hover:bg-muted/50 rounded-t-md;
+  }
+  
+  /* Health Status Utilities */
+  .status-normal, .status-bom {
+    @apply bg-[hsl(var(--health-normal))]/10 text-[hsl(var(--health-normal))] border-[hsl(var(--health-normal))]/20;
+  }
+  .status-atencao {
+    @apply bg-[hsl(var(--health-attention))]/10 text-[hsl(var(--health-attention))] border-[hsl(var(--health-attention))]/20;
+  }
+  .status-critico {
+    @apply bg-[hsl(var(--health-critical))]/10 text-[hsl(var(--health-critical))] border-[hsl(var(--health-critical))]/20;
+  }
+  .status-fim-vida {
+    @apply bg-foreground text-background border-foreground/20;
+  }
+
+  .chart-container {
+    @apply w-full h-full min-h-[400px] p-4 bg-card rounded-xl border shadow-sm;
+  }
+
+  .card-atencao {
+    @apply border-orange-300 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-950/20 hover:bg-orange-100/50 dark:hover:bg-orange-900/30 transition-colors cursor-pointer;
+  }
+  
+  .card-critico {
+    @apply border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100/50 dark:hover:bg-red-900/30 transition-colors cursor-pointer;
+  }
+
+  /* Health Bar utility */
+  .health-bar {
+    @apply h-full transition-all duration-500 rounded-full;
+  }
+  .health-bar-good {
+    @apply bg-gradient-to-r from-green-400 to-green-600;
+  }
+  .health-bar-warning {
+    @apply bg-gradient-to-r from-yellow-400 to-yellow-600;
+  }
+  .health-bar-critical {
+    @apply bg-gradient-to-r from-red-400 to-red-600;
+  }
+
+  /* Interactive Elements */
+  .clickable-row {
+    @apply cursor-pointer transition-colors hover:bg-muted/50;
+  }
+
+  /* Device Table Styling */
+  .device-table {
+    @apply w-full text-sm text-left border-collapse;
+  }
+  .device-row {
+    @apply border-b transition-colors hover:bg-muted/50;
+  }
+  .device-badge-active {
+    @apply bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .device-badge-inactive {
+    @apply bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .device-badge-error {
+    @apply bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .skeleton-loader {
+    @apply animate-pulse bg-muted rounded h-6 w-full;
+  }
+  .empty-state-message {
+    @apply flex flex-col items-center justify-center p-8 text-center text-muted-foreground border-2 border-dashed rounded-lg bg-card/50;
+  }
+  .action-btn {
+    @apply p-2 rounded-md transition-colors hover:bg-muted focus:ring-2 focus:ring-ring text-muted-foreground hover:text-foreground;
+  }
+
+  /* Responsive Design for Mobile Tables */
+  @media (max-width: 768px) {
+    .mobile-stack-table thead {
+      @apply hidden;
+    }
+    .mobile-stack-table tr {
+      @apply block mb-4 border rounded-lg p-4 shadow-sm bg-card;
+    }
+    .mobile-stack-table td {
+      @apply flex flex-col items-start border-none p-2 text-left relative;
+    }
+    .mobile-stack-table td::before {
+      content: attr(data-label);
+      @apply text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider;
+    }
+    .mobile-stack-table td.actions-cell {
+      @apply flex-row justify-end mt-2 pt-2 border-t;
+    }
+    .mobile-stack-table td.actions-cell::before {
+      content: none;
+    }
+  }
+}
