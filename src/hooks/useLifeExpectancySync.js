@@ -9,6 +9,13 @@ import {
 } from '@/utils/tcLifespanCalculations';
 import { getAccelerationFactorStatus as getNonTcFaStatus } from '@/utils/equipmentLifecycleUtils';
 
+// Converte para número sem cair no falsy-trap do zero
+function safeParseFloat(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = parseFloat(value);
+  return isNaN(n) ? null : n;
+}
+
 export const useLifeExpectancySync = (equipmentId) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +32,6 @@ export const useLifeExpectancySync = (equipmentId) => {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      // Fetch identical raw data
       const [eqRes, thermalAllRes, thermal30dRes, historyAllRes, maintRes] = await Promise.all([
         supabase.from('equipments').select(`*, equipment_types(name)`).eq('id', equipmentId).single(),
         supabase.from('equipment_thermal_data').select('*').eq('equipment_id', equipmentId).order('timestamp', { ascending: true }),
@@ -44,7 +50,7 @@ export const useLifeExpectancySync = (equipmentId) => {
 
       const isTC = equipment.equipment_types?.name === 'TC';
 
-      // --- 1. Temperature Statistics (30 days logic parity with HealthDetailsPanel) ---
+      // --- 1. Temperature Statistics (30 days) ---
       let peakTemp = 0;
       let minTemp = 0;
       let averageTemp = 0;
@@ -52,24 +58,40 @@ export const useLifeExpectancySync = (equipmentId) => {
       let lastReadingDate = null;
 
       if (thermalData30d.length > 0) {
-        const temps = thermalData30d.map(d => parseFloat(d.hot_spot_temperature) || parseFloat(d.ambient_temperature) || 0).filter(t => t > 0);
+        const temps = thermalData30d
+          .map(d => {
+            const hs = safeParseFloat(d.hot_spot_temperature);
+            const amb = safeParseFloat(d.ambient_temperature);
+            return hs ?? amb ?? 0;
+          })
+          .filter(t => t > 0);
+
         if (temps.length > 0) {
           peakTemp = Math.max(...temps);
           minTemp = Math.min(...temps);
           averageTemp = temps.reduce((a, b) => a + b, 0) / temps.length;
         }
+
         const lastRec = thermalData30d[thermalData30d.length - 1];
-        currentTemp = parseFloat(lastRec.hot_spot_temperature) || parseFloat(lastRec.ambient_temperature) || null;
+        const hsLast  = safeParseFloat(lastRec.hot_spot_temperature);
+        const ambLast = safeParseFloat(lastRec.ambient_temperature);
+        // Usa hot_spot_temperature como prioridade; cai para ambient se ausente
+        currentTemp = hsLast ?? ambLast;
         lastReadingDate = new Date(lastRec.timestamp);
+
       } else if (historyData.length > 0) {
-        const temps = historyData.map(d => parseFloat(d.temperature) || 0).filter(t => t > 0);
+        const temps = historyData
+          .map(d => safeParseFloat(d.temperature) ?? 0)
+          .filter(t => t > 0);
+
         if (temps.length > 0) {
           peakTemp = Math.max(...temps);
           minTemp = Math.min(...temps);
           averageTemp = temps.reduce((a, b) => a + b, 0) / temps.length;
         }
+
         const lastRec = historyData[historyData.length - 1];
-        currentTemp = parseFloat(lastRec.temperature) || null;
+        currentTemp = safeParseFloat(lastRec.temperature);
         lastReadingDate = lastRec.created_at ? new Date(lastRec.created_at) : null;
       }
 
@@ -82,7 +104,6 @@ export const useLifeExpectancySync = (equipmentId) => {
       let rawFaStatus = 'Bom';
 
       if (isTC) {
-        // TC calculations using precise AM methods
         const formattedHistory = historyData.map(h => ({
           date: h.created_at,
           temperature: h.temperature
@@ -97,7 +118,6 @@ export const useLifeExpectancySync = (equipmentId) => {
         rawHealthStatus = tcData.healthStatus;
         rawFaStatus = getTcFaStatus(faValue).status;
       } else {
-        // Non-TC calculations using precise AM methods
         const healthData = calculateHealthMetrics(thermalData30d, equipment, 'IEEE');
         
         health = healthData.health;
@@ -106,10 +126,10 @@ export const useLifeExpectancySync = (equipmentId) => {
         rawHealthStatus = healthData.status;
 
         if (historyData.length > 0) {
-           const lastHist = historyData[historyData.length - 1];
-           faValue = lastHist.acceleration_factor ?? calculateTcFa(currentTemp); 
+          const lastHist = historyData[historyData.length - 1];
+          faValue = lastHist.acceleration_factor ?? calculateTcFa(currentTemp);
         } else {
-           faValue = calculateTcFa(currentTemp);
+          faValue = calculateTcFa(currentTemp);
         }
         rawFaStatus = getNonTcFaStatus(faValue).status;
       }
@@ -136,7 +156,7 @@ export const useLifeExpectancySync = (equipmentId) => {
       const healthStatus = buildHealthStatus(rawHealthStatus);
       const faStatus = buildFaStatus(rawFaStatus);
 
-      // --- 4. Expiration and Days ---
+      // --- 4. Expiration and Dates ---
       const isExpired = expectedEndOfLifeDate && expectedEndOfLifeDate < new Date();
       const daysRemaining = expectedEndOfLifeDate ? Math.max(0, differenceInDays(expectedEndOfLifeDate, new Date())) : 0;
       const expectedEndOfLifeStr = expectedEndOfLifeDate ? format(expectedEndOfLifeDate, 'dd/MM/yyyy') : 'N/A';
@@ -149,7 +169,7 @@ export const useLifeExpectancySync = (equipmentId) => {
         peakTemp,
         averageTemp,
         minTemp,
-        currentTemp,
+        currentTemp,      // ← agora nunca é null por causa do zero; só null se não houver dado
         lastReadingDate,
         faValue,
         healthStatus,
@@ -162,30 +182,29 @@ export const useLifeExpectancySync = (equipmentId) => {
         equipmentStatus: equipment.status || 'Desconhecido'
       };
 
-      // --- 5. Chart Data Sync ---
+      // --- 5. Chart Data ---
       const tempChartData = thermalDataAll.map(d => ({
         date: format(new Date(d.timestamp), 'dd/MM HH:mm'),
-        Temperatura: Number(d.hot_spot_temperature) || Number(d.ambient_temperature) || 0
+        Temperatura: safeParseFloat(d.hot_spot_temperature) ?? safeParseFloat(d.ambient_temperature) ?? 0
       }));
 
       if (tempChartData.length === 0 && historyData.length > 0) {
-         historyData.filter(d => d.temperature !== null).forEach(d => {
-           tempChartData.push({
-             date: format(new Date(d.created_at || d.report_date), 'dd/MM HH:mm'),
-             Temperatura: Number(d.temperature) || 0
-           });
-         });
+        historyData.filter(d => d.temperature !== null).forEach(d => {
+          tempChartData.push({
+            date: format(new Date(d.created_at || d.report_date), 'dd/MM HH:mm'),
+            Temperatura: safeParseFloat(d.temperature) ?? 0
+          });
+        });
       }
 
       const faChartData = historyData.filter(d => d.acceleration_factor !== null).map(d => ({
         date: format(new Date(d.created_at || d.report_date), 'MM/yyyy'),
         fullDate: format(new Date(d.created_at || d.report_date), 'dd/MM/yyyy HH:mm'),
-        fA: Number(d.acceleration_factor) || 1.0
+        fA: safeParseFloat(d.acceleration_factor) ?? 1.0
       }));
 
-      // Validation Logs
       console.log(`[Sync Validation] Equipment: ${equipment.name} (${equipment.equipment_types?.name})`);
-      console.log(`[Sync Validation] AM Health: ${stats.health.toFixed(1)}%, fA: ${stats.faValue.toFixed(2)}, Status: ${rawHealthStatus}`);
+      console.log(`[Sync Validation] AM Health: ${stats.health.toFixed(1)}%, fA: ${stats.faValue.toFixed(2)}, currentTemp: ${stats.currentTemp}`);
 
       setData({
         stats,
